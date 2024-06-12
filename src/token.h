@@ -14,7 +14,8 @@ enum class TokenType {
     FloatType, // float
 
     Error,
-    End, // '\0'
+    EOI, // '\0'
+    NonTerminal,
     NewLine, // \n
     Identifier, // variable_name, function_name
 
@@ -83,6 +84,12 @@ struct Token {
         this->bool_val = bool_val;
     }
 
+    bool operator==(Token token)
+    {
+        return type == token.type && int_val == token.int_val && float_val == token.float_val &&
+            string_val == token.string_val && bool_val == token.bool_val;
+    }
+
     static Token FloatLiteral(float value) {
         return {
             TokenType::FloatLiteral,
@@ -136,6 +143,16 @@ struct Token {
     static Token Error(std::string value) {
         return {
                 TokenType::Error,
+                std::nullopt,
+                std::nullopt,
+                value,
+                std::nullopt
+        };
+    }
+
+    static Token NonTerminal(std::string value) {
+        return {
+                TokenType::NonTerminal,
                 std::nullopt,
                 std::nullopt,
                 value,

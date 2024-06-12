@@ -16,15 +16,6 @@ int main(int argc, char* argv[]) {
     std::string code((std::istreambuf_iterator<char>(inputFile)), (std::istreambuf_iterator<char>()));
     inputFile.close();
 
-    auto lexer = Lexer(code);
-    Token token;
-    do
-    {
-        token = lexer.getNextToken();
-        if (token.type == TokenType::Error)
-        {
-            std::cout << token.string_val.value() << "\n";
-            break;
-        }
-    } while (token.type != TokenType::End);
+    auto lexer = Lexer();
+    auto token_list = lexer.tokenize(code);
 }

@@ -2,6 +2,7 @@
 #include <string>
 #include "token.h"
 #include <map>
+#include <list>
 
 class Lexer {
     std::string code;
@@ -23,8 +24,10 @@ class Lexer {
     Token word();
     Token op();
     Token str();
-public:
-    Lexer(std::string code);
+
     Token getNextToken();
+public:
+    Lexer();
+    std::list<Token> tokenize(std::string code);
 };
 

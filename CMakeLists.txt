@@ -10,4 +10,7 @@ add_executable(BMake src/main.cpp
         src/constants.h
         src/token.h
         src/Lexer.cpp
-        src/Lexer.h)
+        src/Lexer.h
+        src/Parser.cpp
+        src/Parser.h
+        src/AST.h)

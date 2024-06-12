@@ -1,5 +1,6 @@
 #include "Lexer.h"
 #include <cctype>
+#include <iostream>
 
 char Lexer::current() {
     if (cur_i < code_length)
@@ -19,10 +20,29 @@ char Lexer::move() {
     return current();
 }
 
-Lexer::Lexer(std::string code) {
+std::list<Token> Lexer::tokenize(std::string code)
+{
     this->code = code;
     code_length = code.size();
+    cur_i = 0;
+    next_i = 1;
 
+    std::list<Token> tokens;
+    Token token;
+    do
+    {
+        token = getNextToken();
+        tokens.push_back(token);
+        if (token.type == TokenType::Error)
+        {
+            std::cout << token.string_val.value() << "\n";
+            break;
+        }
+    } while (token.type != TokenType::EOI);
+    return std::move(tokens);
+}
+
+Lexer::Lexer() {
     word_to_token["if"] = Token(TokenType::If);
     word_to_token["else"] = Token(TokenType::Else);
     word_to_token["while"] = Token(TokenType::While);
@@ -74,7 +94,7 @@ Token Lexer::getNextToken() {
     if (skip_spaces())
         return std::move(Token(TokenType::NewLine));
     if (current() == '\0')
-        return std::move(Token(TokenType::End));
+        return std::move(Token(TokenType::EOI));
     if (isdigit(current()))
         return number();
     if (isalpha(current()) || current() == '_')

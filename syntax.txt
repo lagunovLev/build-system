@@ -1,0 +1,19 @@
+# this is calling script in subdirectory
+subdirectory("subdirectory/script", entry="main")
+
+# this is calling script in current directory with arguments and output value
+var value = run_script("count_files", entry="hash", "string")
+
+# кортеж
+var (fig, jg) = ("7335", 977)
+
+# list
+[56, 89, 69]
+
+# main function
+fn main(par1, par2) {
+    return 67, 69
+}
+
+# add rule $0 - input  %0 - output
+add_rule(["input_file_1", "input_file_2"], ["output_file_1", output_file_2], "rule")
