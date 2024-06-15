@@ -4,6 +4,8 @@
 #include "constants.h"
 #include <fstream>
 #include "Lexer.h"
+#include "Parser.h"
+#include "Interpreter.h"
 
 int main(int argc, char* argv[]) {
     auto args_parser = ArgumentsParser();
@@ -18,4 +20,9 @@ int main(int argc, char* argv[]) {
 
     auto lexer = Lexer();
     auto token_list = lexer.tokenize(code);
+    auto parser = Parser();
+    auto ast = parser.getAST(token_list);
+    auto interpreter = Interpreter();
+    float val = interpreter.exec(ast.get()).ToFloat();
+    std::cout << val;
 }

@@ -13,4 +13,7 @@ add_executable(BMake src/main.cpp
         src/Lexer.h
         src/Parser.cpp
         src/Parser.h
-        src/AST.h)
+        src/AST.h
+        src/Interpreter.cpp
+        src/Interpreter.h
+        src/values.h)

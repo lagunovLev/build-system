@@ -35,6 +35,8 @@ enum class TokenType {
     BackSlash,
     Greater, // >
     Less, // <
+    GreaterEq, // >=
+    LessEq, // <=
     Percent, // %
     LParent, // (
     RParent, // )

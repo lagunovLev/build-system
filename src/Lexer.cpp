@@ -87,7 +87,8 @@ Lexer::Lexer() {
     op_to_token["*="] = Token(TokenType::AsteriskEqual);
     op_to_token["/="] = Token(TokenType::SlashEqual);
     op_to_token["+="] = Token(TokenType::PlusEqual);
-    op_to_token["-"] = Token(TokenType::MinusEqual);
+    op_to_token["-="] = Token(TokenType::MinusEqual);
+    op_to_token["%"] = Token(TokenType::Percent);
 }
 
 Token Lexer::getNextToken() {
@@ -114,7 +115,11 @@ bool Lexer::skip_spaces() {
         {
             move();
             while (current() != '\n')
+            {
+                if (current() == '\0')
+                    return false;
                 move();
+            }
             continue;
         }
         if (current() == '\n')

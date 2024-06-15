@@ -2,11 +2,12 @@
 #include "token.h"
 #include <memory>
 #include <vector>
+#include <list>
 
 
 // Basic Nodes
 enum class ExprType {
-    Identifier,
+    Identifier = 0,
     BoolLiteral,
     StringLiteral,
     IntLiteral,
@@ -27,16 +28,22 @@ enum class ExprType {
     GreaterEq,
     LessEq,
     FnCall,
+    Or,
+    And,
+    Mod,
+    Neg,
+    Last,
 };
 
 enum class StmtType {
-    Declaration,
+    Declaration = 0,
     Assignment,
     If,
     While,
     DoWhile,
     For,
     Block,
+    Last,
 };
 
 struct Node
@@ -53,6 +60,8 @@ struct Expr : Node
         node_type = NodeType::Expr;
         left = false;
     }
+
+    virtual ~Expr() { }
 };
 
 struct Stmt : Node
@@ -62,6 +71,8 @@ struct Stmt : Node
     Stmt() {
         node_type = NodeType::Stmt;
     }
+
+    virtual ~Stmt() { }
 };
 
 
@@ -132,8 +143,8 @@ struct BinaryOpExpr : Expr
     std::unique_ptr<Expr> left_expr;
     std::unique_ptr<Expr> right_expr;
 
-    BinaryOpExpr(std::unique_ptr<Expr> left_expr, std::unique_ptr<Expr> right_expr) : Expr() {
-        expr_type = ExprType::Mul;
+    BinaryOpExpr(std::unique_ptr<Expr> left_expr, std::unique_ptr<Expr> right_expr, ExprType type) : Expr() {
+        expr_type = type;
         this->left_expr = std::move(left_expr);
         this->right_expr = std::move(right_expr);
     }
@@ -141,11 +152,22 @@ struct BinaryOpExpr : Expr
 
 struct FnCallExpr : Expr
 {
-    std::unique_ptr<Expr> expr;
+    std::unique_ptr<Expr> id_expr;
+    std::list<std::unique_ptr<Expr>> args;
 
-    FnCallExpr(std::unique_ptr<Expr> expr) : Expr() {
+    FnCallExpr(std::unique_ptr<Expr> id_expr) : Expr() {
         expr_type = ExprType::FnCall;
-        this->expr = std::move(expr);
+        this->id_expr = std::move(id_expr);
+    }
+
+    FnCallExpr(std::unique_ptr<Expr> id_expr, std::list<std::unique_ptr<Expr>>& args) : Expr() {
+        expr_type = ExprType::FnCall;
+        this->id_expr = std::move(id_expr);
+        this->args = std::move(args);
+    }
+
+    void add(std::unique_ptr<Expr> arg) {
+        args.push_back(std::move(arg));
     }
 };
 
@@ -179,6 +201,11 @@ struct BlockStmt : Stmt
 
     BlockStmt() : Stmt() {
         stmt_type = StmtType::Block;
+    }
+
+    BlockStmt(std::vector<std::unique_ptr<Stmt>>& stmts) : Stmt() {
+        stmt_type = StmtType::Block;
+        this->stmts = std::move(stmts);
     }
 
     void add(std::unique_ptr<Stmt> stmt) {
