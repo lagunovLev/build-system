@@ -89,6 +89,7 @@ Lexer::Lexer() {
     op_to_token["+="] = Token(TokenType::PlusEqual);
     op_to_token["-="] = Token(TokenType::MinusEqual);
     op_to_token["%"] = Token(TokenType::Percent);
+    op_to_token["//"] = Token(TokenType::DoubleSlash);
 }
 
 Token Lexer::getNextToken() {

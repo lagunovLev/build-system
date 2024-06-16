@@ -17,3 +17,7 @@ add_executable(BMake src/main.cpp
         src/Interpreter.cpp
         src/Interpreter.h
         src/values.h)
+
+find_package(Boost COMPONENTS filesystem iostreams REQUIRED)
+target_include_directories(BMake PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(BMake ${Boost_LIBRARIES})

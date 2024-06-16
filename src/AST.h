@@ -18,6 +18,7 @@ enum class ExprType {
     ToFloat,
     Mul,
     Div,
+    IntDiv,
     Add,
     Sub,
     Eq,

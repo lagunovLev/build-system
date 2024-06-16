@@ -32,6 +32,7 @@ enum class TokenType {
     Minus, // -
     Asterisk, // *
     Slash, // /
+    DoubleSlash, // //
     BackSlash,
     Greater, // >
     Less, // <

@@ -23,6 +23,6 @@ int main(int argc, char* argv[]) {
     auto parser = Parser();
     auto ast = parser.getAST(token_list);
     auto interpreter = Interpreter();
-    float val = interpreter.exec(ast.get()).ToFloat();
-    std::cout << val;
+    auto val = interpreter.exec(ast.get());
+    std::cout << val.ToFloat();
 }

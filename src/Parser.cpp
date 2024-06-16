@@ -137,6 +137,12 @@ std::unique_ptr<Expr> Parser::term() {
         auto right = term();
         return std::make_unique<BinaryOpExpr>(std::move(left), std::move(right), ExprType::Div);
     }
+    if (current().type == TokenType::DoubleSlash)
+    {
+        move();
+        auto right = term();
+        return std::make_unique<BinaryOpExpr>(std::move(left), std::move(right), ExprType::IntDiv);
+    }
     if (current().type == TokenType::Percent)
     {
         move();
