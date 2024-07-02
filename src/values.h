@@ -2,9 +2,11 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include "Memory.h"
 
 enum class ValueType {
-    Int, String, Bool, Float,
+    Int, Reference, Bool, Float,
+    String,
 };
 
 class Value
@@ -12,9 +14,11 @@ class Value
 public:
     ValueType type;
     union {
+        unsigned long long copy;
         int int_val;
         float float_val;
         bool bool_val;
+        ValueID reference;
         std::string* str_val = nullptr;
     };
 
@@ -30,7 +34,7 @@ public:
         if (type == ValueType::String)
             str_val = new std::string(*other.str_val);
         else
-            int_val = other.int_val;
+            copy = other.copy;
     }
 
     Value& operator=(const Value& other) {
@@ -41,7 +45,7 @@ public:
             if (type == ValueType::String)
                 str_val = new std::string(*other.str_val);
             else
-                int_val = other.int_val;
+                copy = other.copy;
         }
         return *this;
     }
@@ -53,7 +57,7 @@ public:
             str_val = other.str_val;
             other.str_val = nullptr;
         }
-        else int_val = other.int_val;
+        else copy = other.copy;
     }
 
     Value& operator=(Value&& other) noexcept {
@@ -67,7 +71,7 @@ public:
                 other.str_val = nullptr;
             }
             else
-                int_val = other.int_val;
+                copy = other.copy;
         }
         return *this;
     }
@@ -93,11 +97,11 @@ public:
         return std::move(val);
     }
 
-    static Value String(std::string& value) {
-        Value val;
-        val.type = ValueType::String;
-        val.str_val = new std::string(value);
-        return std::move(val);
+    static std::unique_ptr<Value> String(std::string& value) {
+        auto val = std::make_unique<Value>();
+        val->type = ValueType::String;
+        val->str_val = new std::string(value);
+        return val;
     }
 
     float ToFloat() {
@@ -128,7 +132,7 @@ public:
     }
 
     bool IsNumeric() {
-        return type != ValueType::String;
+        return type == ValueType::Int || type == ValueType::Bool || type == ValueType::Float;
     }
 
     bool IsInteger() {

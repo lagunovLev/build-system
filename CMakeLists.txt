@@ -16,7 +16,11 @@ add_executable(BMake src/main.cpp
         src/AST.h
         src/Interpreter.cpp
         src/Interpreter.h
-        src/values.h)
+        src/values.h
+        src/SymbolTable.cpp
+        src/SymbolTable.h
+        src/Memory.cpp
+        src/Memory.h)
 
 find_package(Boost COMPONENTS filesystem iostreams REQUIRED)
 target_include_directories(BMake PRIVATE ${Boost_INCLUDE_DIRS})

@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
     auto token_list = lexer.tokenize(code);
     auto parser = Parser();
     auto ast = parser.getAST(token_list);
+    std::cout << "Parsed\n";
     auto interpreter = Interpreter();
-    auto val = interpreter.exec(ast.get());
-    std::cout << val.ToFloat();
+    interpreter.exec(ast.get());
+    interpreter.memory.print();
 }

@@ -4,6 +4,7 @@
 #include "values.h"
 #include <boost/container_hash/hash.hpp>
 #include <utility>
+#include "SymbolTable.h"
 
 enum class ValueProperty {
     Numeric, Integer, List
@@ -37,19 +38,25 @@ struct std::hash<operation>
 
 class Interpreter
 {
-    std::unordered_map<operation, std::function<Value(Interpreter* interpreter, Value v1, Value v2)>> binaryOperations;
-    void addOp(operation op, const std::function<Value(Interpreter* interpreter, Value v1, Value v2)>& f);
+    std::unordered_map<operation, std::function<std::shared_ptr<Value>(Interpreter* interpreter, const std::shared_ptr<Value>& v1, const std::shared_ptr<Value>& v2)>> binaryOperations;
+    void addOp(operation op, const std::function<std::shared_ptr<Value>(Interpreter* interpreter, const std::shared_ptr<Value>& v1, const std::shared_ptr<Value>& v2)>& f);
 public:
-    Value DoBinOp(Value v1, Value v2, ExprType type);
+    std::shared_ptr<SymbolTable> symbolTable;
+    Memory memory;
+    std::shared_ptr<Value> DoBinOp(const std::shared_ptr<Value>& v1, const std::shared_ptr<Value>& v2, ExprType type);
     std::unordered_map<ValueType, std::vector<ValueProperty>> properties = {
             std::pair<ValueType, std::vector<ValueProperty>>(ValueType::Bool, { ValueProperty::Integer, ValueProperty::Numeric }),
             std::pair<ValueType, std::vector<ValueProperty>>(ValueType::Int, { ValueProperty::Integer, ValueProperty::Numeric }),
             std::pair<ValueType, std::vector<ValueProperty>>(ValueType::Float, { ValueProperty::Numeric }),
-            std::pair<ValueType, std::vector<ValueProperty>>(ValueType::String, { ValueProperty::List }),
+            std::pair<ValueType, std::vector<ValueProperty>>(ValueType::String, {ValueProperty::List }),
     };
 
-    std::function<Value(Interpreter* interpreter, Expr* expr)> expr_handlers[(int)ExprType::Last];
+    std::function<std::shared_ptr<Value>(Interpreter* interpreter, Expr* expr)> expr_handlers[(int)ExprType::Last];
+    std::function<ValueID(Interpreter* interpreter, Expr* expr)> left_expr_handlers[(int)ExprType::Last];
+    std::function<void(Interpreter* interpreter, Stmt* stmt)> stmt_handlers[(int)StmtType::Last];
     Interpreter();
 
-    Value exec(Expr* ast);
+    std::shared_ptr<Value> eval(Expr* ast);
+    void exec(Stmt* ast);
+    ValueID eval_left(Expr* ast);
 };

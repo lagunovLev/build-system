@@ -38,7 +38,9 @@ enum class ExprType {
 
 enum class StmtType {
     Declaration = 0,
+    Expression,
     Assignment,
+    None,
     If,
     While,
     DoWhile,
@@ -174,13 +176,25 @@ struct FnCallExpr : Expr
 
 
 // Statements
+struct ExpressionStmt : Stmt
+{
+    std::unique_ptr<Expr> expr;
+
+    ExpressionStmt(std::unique_ptr<Expr> expr) : Stmt() {
+        stmt_type = StmtType::Expression;
+        this->expr = std::move(expr);
+    }
+};
+
 struct DeclarationStmt : Stmt
 {
     std::unique_ptr<IdentifierExpr> id;
+    std::unique_ptr<Expr> right;
 
-    DeclarationStmt(std::unique_ptr<IdentifierExpr> id) : Stmt() {
+    DeclarationStmt(std::unique_ptr<IdentifierExpr> id, std::unique_ptr<Expr> right) : Stmt() {
         stmt_type = StmtType::Declaration;
         this->id = std::move(id);
+        this->right = std::move(right);
     }
 };
 
@@ -193,6 +207,12 @@ struct AssignmentStmt : Stmt
         stmt_type = StmtType::Assignment;
         this->left = std::move(left);
         this->right = std::move(right);
+    }
+};
+
+struct NoneStmt : Stmt {
+    NoneStmt() : Stmt() {
+        stmt_type = StmtType::None;
     }
 };
 
@@ -217,10 +237,10 @@ struct BlockStmt : Stmt
 struct IfStmt : Stmt
 {
     std::unique_ptr<Expr> cond;
-    std::unique_ptr<Stmt> action;
-    std::unique_ptr<Stmt> else_action;
+    std::unique_ptr<BlockStmt> action;
+    std::unique_ptr<BlockStmt> else_action;
 
-    IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> action, std::unique_ptr<Stmt> else_action) : Stmt() {
+    IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> action, std::unique_ptr<BlockStmt> else_action) : Stmt() {
         stmt_type = StmtType::If;
         this->cond = std::move(cond);
         this->action = std::move(action);
@@ -231,9 +251,9 @@ struct IfStmt : Stmt
 struct WhileStmt : Stmt
 {
     std::unique_ptr<Expr> cond;
-    std::unique_ptr<Stmt> action;
+    std::unique_ptr<BlockStmt> action;
 
-    WhileStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> action) : Stmt() {
+    WhileStmt(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> action) : Stmt() {
         stmt_type = StmtType::While;
         this->cond = std::move(cond);
         this->action = std::move(action);
@@ -243,9 +263,9 @@ struct WhileStmt : Stmt
 struct DoWhileStmt : Stmt
 {
     std::unique_ptr<Expr> cond;
-    std::unique_ptr<Stmt> action;
+    std::unique_ptr<BlockStmt> action;
 
-    DoWhileStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> action) : Stmt() {
+    DoWhileStmt(std::unique_ptr<Expr> cond, std::unique_ptr<BlockStmt> action) : Stmt() {
         stmt_type = StmtType::DoWhile;
         this->cond = std::move(cond);
         this->action = std::move(action);

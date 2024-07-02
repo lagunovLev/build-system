@@ -26,7 +26,22 @@ bool Parser::match(TokenType type) {
     return false;
 }
 
-std::unique_ptr<Expr> Parser::getAST(std::list<Token>& tokens) {
+bool Parser::match_skip(TokenType type) {
+    skipNewLine();
+    return match(type);
+}
+
+Token Parser::current_skip() {
+    skipNewLine();
+    return current();
+}
+
+void Parser::move_skip() {
+    skipNewLine();
+    move();
+}
+
+std::unique_ptr<Stmt> Parser::getAST(std::list<Token>& tokens) {
     this->tokens = &tokens;
     it = tokens.begin();
 
@@ -35,7 +50,173 @@ std::unique_ptr<Expr> Parser::getAST(std::list<Token>& tokens) {
     //    std::cout << t_last->string_val.value() << '\n';
     //}
     //else
-        return boolExpr();
+        return stmtBlock();
+}
+
+std::unique_ptr<BlockStmt> Parser::stmtBlock() {
+    auto block = std::make_unique<BlockStmt>();
+    while (true)
+    {
+        skipStmtEnd();
+        if (current().type == TokenType::Var)
+            block->add(declaration());
+        else if (current().type == TokenType::If)
+            block->add(ifStmt());
+        else if (current().type == TokenType::While)
+            block->add(whileStmt());
+        else if (current().type == TokenType::EOI || current().type == TokenType::RBrace)
+            break;
+        else
+            block->add(assignment());
+    }
+    return std::move(block);
+}
+
+std::unique_ptr<Stmt> Parser::stmt() {
+    skipStmtEnd();
+    if (current().type == TokenType::Var)
+        return declaration();
+    if (current().type == TokenType::If)
+        return ifStmt();
+    if (current().type == TokenType::While)
+        return whileStmt();
+    return assignment();
+}
+
+std::unique_ptr<Stmt> Parser::ifStmt() {
+    match(TokenType::If);
+    skipNewLine();
+    auto cond = boolExpr();
+    std::unique_ptr<BlockStmt> body;
+    std::unique_ptr<BlockStmt> else_body;
+    if (current_skip().type == TokenType::LBrace)
+    {
+        move();
+        body = stmtBlock();
+        match(TokenType::RBrace);
+    }
+    else {
+        body = std::make_unique<BlockStmt>();
+        body->add(stmt());
+    }
+    if (current_skip().type == TokenType::Else)
+    {
+        move();
+        if (current_skip().type == TokenType::LBrace)
+        {
+            move();
+            else_body = stmtBlock();
+            match(TokenType::RBrace);
+        }
+        else {
+            else_body = std::make_unique<BlockStmt>();
+            else_body->add(stmt());
+        }
+    }
+    else {
+        else_body = std::make_unique<BlockStmt>();
+        else_body->add(std::make_unique<NoneStmt>());
+    }
+    return std::make_unique<IfStmt>(std::move(cond), std::move(body), std::move(else_body));
+}
+
+std::unique_ptr<Stmt> Parser::whileStmt() {
+    match(TokenType::While);
+    skipNewLine();
+    auto cond = boolExpr();
+    std::unique_ptr<BlockStmt> body;
+    if (current_skip().type == TokenType::LBrace)
+    {
+        move();
+        body = stmtBlock();
+        match(TokenType::RBrace);
+    }
+    else {
+        body = std::make_unique<BlockStmt>();
+        body->add(stmt());
+    }
+    return std::make_unique<WhileStmt>(std::move(cond), std::move(body));
+}
+
+std::unique_ptr<Stmt> Parser::doWhileStmt() {
+    match(TokenType::Do);
+    std::unique_ptr<BlockStmt> body;
+    if (current_skip().type == TokenType::LBrace)
+    {
+        move();
+        body = stmtBlock();
+        match(TokenType::RBrace);
+    }
+    else {
+        body = std::make_unique<BlockStmt>();
+        body->add(stmt());
+    }
+    match(TokenType::While);
+    auto cond = boolExpr();
+    stmtEnd();
+    return std::make_unique<DoWhileStmt>(std::move(cond), std::move(body));
+}
+
+
+
+std::unique_ptr<Stmt> Parser::declaration() {
+    match(TokenType::Var);
+    std::unique_ptr<IdentifierExpr> expr = identifierExpr();
+    match(TokenType::Assign);
+    std::unique_ptr<Expr> right_expr = boolExpr();
+    stmtEnd();
+    return std::make_unique<DeclarationStmt>(std::move(expr), std::move(right_expr));
+}
+
+std::unique_ptr<Stmt> Parser::assignment() {
+    std::unique_ptr<Expr> left_expr = boolExpr();
+    if (current().type == TokenType::Assign)
+    {
+        move();
+        std::unique_ptr<Expr> right_expr = boolExpr();
+        stmtEnd();
+        return std::make_unique<AssignmentStmt>(std::move(left_expr), std::move(right_expr));
+    }
+    stmtEnd();
+    return std::make_unique<ExpressionStmt>(std::move(left_expr));
+}
+
+void Parser::stmtEnd() {
+    if (current().type == TokenType::Semicolon
+        || current().type == TokenType::NewLine
+        || current().type == TokenType::EOI)
+        move();
+    else
+        throw std::exception("Expected end of statement");
+}
+
+void Parser::skipStmtEnd() {
+    while (current().type == TokenType::Semicolon
+        || current().type == TokenType::NewLine
+        || current().type == TokenType::EOI) {
+        if (current().type != TokenType::EOI)
+            move();
+        else
+            return;
+    }
+}
+
+void Parser::skipNewLine() {
+    while (current().type == TokenType::NewLine
+           || current().type == TokenType::EOI) {
+        if (current().type != TokenType::EOI)
+            move();
+        else
+            return;
+    }
+}
+
+std::unique_ptr<IdentifierExpr> Parser::identifierExpr() {
+    if (current().type != TokenType::Identifier)
+        std::cout << "Wrong token type";
+    auto str = current().string_val.value();
+    move();
+    return std::make_unique<IdentifierExpr>(str);
 }
 
 std::unique_ptr<Expr> Parser::boolExpr() {
@@ -230,4 +411,5 @@ std::unique_ptr<Expr> Parser::primary() {
         //}
         return std::move(expr);
     }
+    throw std::exception("Unknown token");
 }
